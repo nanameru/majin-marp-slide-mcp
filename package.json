@@ -7,20 +7,32 @@
   "bin": {
     "majin-marp-slide": "./build/index.js"
   },
-  "files": ["build"],
+  "files": [
+    "build"
+  ],
   "scripts": {
     "build": "tsc && chmod 755 build/index.js",
     "prepare": "npm run build",
     "test": "echo \"No tests yet\" && exit 0"
   },
-  "keywords": ["mcp", "model-context-protocol", "marp", "slides"],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "marp",
+    "slides"
+  ],
   "author": "",
   "license": "MIT",
-  "engines": { "node": ">=18" },
-  "publishConfig": { "access": "public" },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.3",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",

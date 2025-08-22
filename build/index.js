@@ -1,36 +1,19 @@
 #!/usr/bin/env node
 import "dotenv/config";
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-function assertValidArgs(input) {
-    const candidate = input;
-    if (!candidate || typeof candidate !== "object") {
-        throw new Error("Input must be an object");
-    }
-    if (typeof candidate.title !== "string" || candidate.title.trim().length === 0) {
-        throw new Error("'title' is required and must be a non-empty string");
-    }
-    if (candidate.audience !== undefined && typeof candidate.audience !== "string") {
-        throw new Error("'audience' must be a string if provided");
-    }
-    if (candidate.pages !== undefined) {
-        if (typeof candidate.pages !== "number" || !Number.isFinite(candidate.pages) || candidate.pages <= 0) {
-            throw new Error("'pages' must be a positive number if provided");
-        }
-    }
-    if (candidate.style !== undefined) {
-        const allowed = ["tech", "business", "conference"];
-        if (typeof candidate.style !== "string" || !allowed.includes(candidate.style)) {
-            throw new Error("'style' must be one of: tech, business, conference");
-        }
-    }
-    if (candidate.language !== undefined) {
-        const allowedLang = ["ja", "en"];
-        if (typeof candidate.language !== "string" || !allowedLang.includes(candidate.language)) {
-            throw new Error("'language' must be one of: ja, en");
-        }
-    }
-}
+import { z } from "zod";
+const server = new McpServer({
+    name: "majin-marp-slide",
+    version: "1.0.0"
+});
+const MarpPromptSchema = z.object({
+    title: z.string().min(1),
+    audience: z.string().optional(),
+    pages: z.number().int().positive().optional(),
+    style: z.enum(["tech", "business", "conference"]).optional(),
+    language: z.enum(["ja", "en"]).default("ja").optional()
+});
 function buildMarpPrompt(args) {
     const { title, audience = "general", pages = 10, style = "tech", language = "ja", } = args;
     const localeHeader = language === "en"
@@ -113,49 +96,9 @@ ${language === "en" ? `
 `}
 `;
 }
-const tools = [
-    {
-        name: "marp_prompt",
-        description: "Return a high-quality prompt for generating a Marp slide deck",
-        inputSchema: {
-            type: "object",
-            properties: {
-                title: { type: "string", description: "Slide deck title (required)" },
-                audience: { type: "string", description: "Intended audience" },
-                pages: { type: "number", description: "Approximate number of pages" },
-                style: {
-                    type: "string",
-                    enum: ["tech", "business", "conference"],
-                    description: "Presentation style variant"
-                },
-                language: {
-                    type: "string",
-                    enum: ["ja", "en"],
-                    default: "ja",
-                    description: "Prompt language"
-                }
-            },
-            required: ["title"]
-        },
-        handler: async (input) => {
-            assertValidArgs(input);
-            const prompt = buildMarpPrompt(input);
-            return { content: [{ type: "text", text: prompt }] };
-        }
-    }
-];
-const server = new Server({
-    name: "majin-marp-slide",
-    version: "1.0.0"
-}, { capabilities: { tools: {} } });
-for (const tool of tools) {
-    server.tool(tool);
-}
+server.tool("marp_prompt", "Return a high-quality prompt for generating a Marp slide deck", MarpPromptSchema.shape, (args) => {
+    const prompt = buildMarpPrompt(args);
+    return { content: [{ type: "text", text: prompt }] };
+});
 const transport = new StdioServerTransport();
-try {
-    await server.connect(transport);
-}
-catch (error) {
-    console.error("Failed to start majin-marp-slide:", error);
-    process.exit(1);
-}
+await server.connect(transport);
