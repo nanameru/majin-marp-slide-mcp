@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "majin-marp-slide": {
+      "command": "npx",
+      "args": ["majin-marp-slide@1.0.0"]
+    }
+  }
+}
