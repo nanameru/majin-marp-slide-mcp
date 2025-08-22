@@ -63,3 +63,48 @@ npm run build
 ### Notes
 - Pin with @1.0.0 for stability if desired
 - Provider-agnostic by design
+
+## Publish to npm for NPX usage on other machines
+Follow these steps to publish so others can run it via `npx` without cloning:
+
+1. Create/sign in to an npm account: https://www.npmjs.com/
+2. Login from your terminal:
+   ```bash
+   npm login
+   ```
+3. Verify login:
+   ```bash
+   npm whoami
+   ```
+4. Ensure the package name is unique on npm. If you prefer a scoped name, set it in `package.json` (e.g. `@your-scope/majin-marp-slide`) and keep `publishConfig.access` as `public`.
+5. Build the project:
+   ```bash
+   npm run build
+   ```
+6. Publish (public):
+   ```bash
+   npm publish --access public
+   ```
+7. Versioning for updates (example: patch):
+   ```bash
+   npm version patch -m "chore: release %s"
+   git push --follow-tags
+   npm publish --access public
+   ```
+
+### Use from any machine (NPX)
+Once published, configure your MCP client to run it via NPX:
+
+```json
+{
+  "mcpServers": {
+    "majin-marp-slide": {
+      "command": "npx",
+      "args": ["majin-marp-slide@1.0.0"]
+    }
+  }
+}
+```
+
+Replace `1.0.0` with your published version.
+
